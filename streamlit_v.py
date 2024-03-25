@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.stem import PorterStemmer
+from services.youtube_crawler_service import youtube_crawler_service
 
 def create_vote_buttons(i):
   col1, col2 = st.columns(2)
@@ -51,6 +52,9 @@ def modify_vector(df, i):
 df = pd.read_csv('./irpackage.csv')
 df.dropna(inplace=True)
 df['vote'] = 1
+print(df.columns)
+df.set_index('Unnamed: 0', inplace=True)
+# df.drop(columns=['Unnamed: 0'], inplace=True)
 
 lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df = build_tf_idf(df['lyrics'])
 title_vocabulary, title_idf, tfidf_title_df = build_tf_idf(df['title'])
@@ -100,6 +104,7 @@ if st.button("Find the song"):
             if i == 0:
                 st.write('There is no such lyrics found! please try again with some other lyric...')
             break
-        st.write(df.iloc[index])
-
+        cdf = df.iloc[index]
+        st.write(cdf)
+        st.markdown(youtube_crawler_service.get_yt_link(cdf['title']+' '+cdf['movie']+' '+cdf['artist']), unsafe_allow_html=True)
         create_vote_buttons(i)
