@@ -52,9 +52,7 @@ def modify_vector(df, i):
 df = pd.read_csv('./irpackage.csv')
 df.dropna(inplace=True)
 df['vote'] = 1
-print(df.columns)
 df.set_index('Unnamed: 0', inplace=True)
-# df.drop(columns=['Unnamed: 0'], inplace=True)
 
 lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df = build_tf_idf(df['lyrics'])
 title_vocabulary, title_idf, tfidf_title_df = build_tf_idf(df['title'])
@@ -106,5 +104,5 @@ if st.button("Find the song"):
             break
         cdf = df.iloc[index]
         st.write(cdf)
-        st.markdown(youtube_crawler_service.get_yt_link(cdf['title']+' '+cdf['movie']+' '+cdf['artist']), unsafe_allow_html=True)
+        st.markdown(youtube_crawler_service.GetYtVideo(cdf['title']+' '+cdf['movie']+' '+cdf['artist']), unsafe_allow_html=True)
         create_vote_buttons(i)
