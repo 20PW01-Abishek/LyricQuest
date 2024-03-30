@@ -6,7 +6,7 @@ class youtube_crawler_service:
         import json
         import re
 
-        r = requests.get('https://www.youtube.com/results?search_query={0}+official+trailer'.format(query))
+        r = requests.get('https://www.youtube.com/results?search_query={0}'.format(query))
         soup = BeautifulSoup(r.content, 'html.parser')
         script_tags = soup.find_all('script')
         ytInitialData_json = None
@@ -19,7 +19,15 @@ class youtube_crawler_service:
                     break
 
         data = ytInitialData_json.get('contents')
-        id = data['twoColumnSearchResultsRenderer']['primaryContents']['sectionListRenderer']['contents'][0]['itemSectionRenderer']['contents'][1]['videoRenderer']['videoId'] 
+        id = data.get('twoColumnSearchResultsRenderer', {})\
+                .get('primaryContents', {})\
+                .get('sectionListRenderer', {})\
+                .get('contents', [{}])[0]\
+                .get('itemSectionRenderer', {})\
+                .get('contents', [{}])[0]\
+                .get('videoRenderer', {})\
+                .get('videoId')
+
         song_url = f'https://www.youtube.com/watch?v={id}'
         hyperlink = f'<a href="{song_url}" target="_blank">Listen to the song now!</a>'
         return hyperlink

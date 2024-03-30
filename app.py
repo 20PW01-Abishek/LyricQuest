@@ -7,19 +7,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from nltk.stem import PorterStemmer
 from services.youtube_crawler_service import youtube_crawler_service
 
-def create_vote_buttons(i):
-  col1, col2 = st.columns(2)
-
-  with col1:
-    if st.button(label="\U0001f44d", key=f"upvote_{i}", help="Up vote"):
-      df.loc[i, 'vote'] += 1
-      st.write("Up voted for item ", i)
-
-  with col2:
-    if st.button(label="\U0001f44e", key=f"downvote_{i}", help="Down vote"):
-      df.loc[i, 'vote'] += -1
-      st.write("Down voted for item ", i)
-
 def build_tf_idf(df):
     vectorizer = TfidfVectorizer()
     X = vectorizer.fit_transform(df)
@@ -51,21 +38,17 @@ def modify_vector(df, i):
 
 df = pd.read_csv('./irpackage.csv')
 df.dropna(inplace=True)
-df['vote'] = 1
 df.set_index('Unnamed: 0', inplace=True)
 
 lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df = build_tf_idf(df['lyrics'])
 title_vocabulary, title_idf, tfidf_title_df = build_tf_idf(df['title'])
 
 st.title("LyricQuest - A song search engine")
-
 query = st.text_input('',placeholder='Enter phrases of lyrics')
-
+num = st.number_input('Number of results', placeholder='Number of results', min_value=5, max_value=20, step=1, format='%d')
 alpha = st.slider("Select alpha value", 0.0, 1.0, 0.5)
 
-num = 5
-
-if st.button("Find the song"):
+if st.button("Find the song", type='primary'):
     query = tokenize(query)
 
     query_title_dict = dict.fromkeys(title_vocabulary, 0)
@@ -102,7 +85,9 @@ if st.button("Find the song"):
             if i == 0:
                 st.write('There is no such lyrics found! please try again with some other lyric...')
             break
+        
         cdf = df.iloc[index]
         st.write(cdf)
-        st.markdown(youtube_crawler_service.GetYtVideo(cdf['title']+' '+cdf['movie']+' '+cdf['artist']), unsafe_allow_html=True)
-        create_vote_buttons(i)
+        st.markdown(youtube_crawler_service.GetYtVideo(cdf['title']+' video song '+cdf['artist']), unsafe_allow_html=True)
+        st.button(label="\U0001f44d", key=f'like{i}')
+        st.button(label="\U0001f44e", key=f'dislike{i}')
