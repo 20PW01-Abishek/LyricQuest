@@ -1,11 +1,11 @@
+import requests
+from bs4 import BeautifulSoup
+import json
+import re
+
 class youtube_crawler_service:
     @staticmethod
     def GetYtVideo(query):
-        import requests
-        from bs4 import BeautifulSoup
-        import json
-        import re
-
         r = requests.get('https://www.youtube.com/results?search_query={0}'.format(query))
         soup = BeautifulSoup(r.content, 'html.parser')
         script_tags = soup.find_all('script')
