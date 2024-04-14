@@ -37,16 +37,6 @@ def create_query_df(query_dict, idf):
 def modify_vector(df, i):
     return np.array(df.iloc[i]).reshape(1, -1)
 
-def like_click(query, title, id):
-    with open('user_interactions.txt', 'a') as f:
-        json.dump({'query': query, 'title': title, 'id': int(id), 'action': 'like'}, f)
-        f.write('\n')
-
-def dislike_click(query, title, id):
-    with open('user_interactions.txt', 'a') as f:
-        json.dump({'query': query, 'title': title, 'id': int(id), 'action': 'dislike'}, f)
-        f.write('\n')
-
 df = pd.read_csv('./irpackage.csv')
 df.dropna(inplace=True)
 df.set_index('Unnamed: 0', inplace=True)
@@ -100,5 +90,3 @@ if st.button("Find the song", type='primary'):
         cdf = df.iloc[index]
         st.write(cdf)
         st.markdown(youtube_crawler_service.GetYtVideo(cdf['title']+' video song '+cdf['artist']), unsafe_allow_html=True)
-        st.button(label="\U0001f44d", key=f'like{i}', on_click= like_click, args=(query, cdf['title'], cdf.name))
-        st.button(label="\U0001f44e", key=f'dislike{i}', on_click= dislike_click,  args=(query, cdf['title'], cdf.name))
