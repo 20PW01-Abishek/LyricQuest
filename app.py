@@ -2,19 +2,14 @@ import streamlit as st
 import re
 import pandas as pd
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.stem import PorterStemmer
 from services.youtube_crawler_service import youtube_crawler_service
 import json
+import pickle
 
-def build_tf_idf(df):
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(df)
-    vocabulary = vectorizer.get_feature_names_out()
-    idf = vectorizer.idf_
-    tfidf = pd.DataFrame(X.toarray(), columns=vocabulary)
-    return vocabulary, idf, tfidf
+with open('utils/precomputed_data.pkl', 'rb') as f:
+    (lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df, title_vocabulary, title_idf, tfidf_title_df) = pickle.load(f)
 
 def tokenize(string):
     tokens = []
@@ -40,9 +35,6 @@ def modify_vector(df, i):
 df = pd.read_csv('./irpackage.csv')
 df.dropna(inplace=True)
 df.set_index('Unnamed: 0', inplace=True)
-
-lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df = build_tf_idf(df['lyrics'])
-title_vocabulary, title_idf, tfidf_title_df = build_tf_idf(df['title'])
 
 st.title("LyricQuest - A song search engine")
 query = st.text_input('',placeholder='Enter phrases of lyrics')
