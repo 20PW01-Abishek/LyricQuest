@@ -7,9 +7,44 @@ from nltk.stem import PorterStemmer
 from services.youtube_crawler_service import youtube_crawler_service
 import json
 import pickle
+import mysql.connector
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+cnx = mysql.connector.connect(user='admin', password='sqladmin',
+                              host='localhost',
+                              database='lyricquest')
+cursor = cnx.cursor()
 
 with open('utils/precomputed_data.pkl', 'rb') as f:
     (lyrics_vocabulary, lyrics_idf, tfidf_lyrics_df, title_vocabulary, title_idf, tfidf_title_df) = pickle.load(f)
+
+def like_click(query, title, song_id):
+    cursor.execute("SELECT id, like_count FROM user_interactions WHERE query = %s AND song_id = %s", (query, song_id))
+    existing_entry = cursor.fetchone()
+
+    if existing_entry:
+        interaction_id, like_count = existing_entry
+        updated_like_count = like_count + 1
+        cursor.execute("UPDATE user_interactions SET like_count = %s WHERE id = %s", (updated_like_count, interaction_id))
+    else:
+        cursor.execute("INSERT INTO user_interactions (query, title, song_id, like_count) VALUES (%s, %s, %s, 1)", (query, title, song_id))
+
+    cnx.commit()
+
+def dislike_click(query, title, song_id):
+    cursor.execute("SELECT id, dislike_count FROM user_interactions WHERE query = %s AND song_id = %s", (query, song_id))
+    existing_entry = cursor.fetchone()
+
+    if existing_entry:
+        interaction_id, dislike_count = existing_entry
+        updated_dislike_count = dislike_count + 1
+        cursor.execute("UPDATE user_interactions SET dislike_count = %s WHERE id = %s", (updated_dislike_count, interaction_id))
+    else:
+        cursor.execute("INSERT INTO user_interactions (query, title, song_id, dislike_count) VALUES (%s, %s, %s, 1)", (query, title, song_id))
+
+    cnx.commit()
 
 def tokenize(string):
     tokens = []
@@ -68,13 +103,24 @@ if st.button("Find the song", type='primary'):
         title_similarity = cosine_similarity(query_title_vector, title_vector)[0][0]
         lyric_similarity = cosine_similarity(query_lyrics_vector, lyric_vector)[0][0]
 
-        similarity[i] = alpha * title_similarity + (1 - alpha) * lyric_similarity
+        cursor.execute("SELECT like_count, dislike_count FROM user_interactions WHERE query = %s AND song_id = %s", (query, i))
+        interaction_entry = cursor.fetchone()
+        net_preference = 0
 
-    sorted_similarity = dict(sorted(similarity.items(), key=lambda item: -item[1]))
+        if interaction_entry:
+            like_count, dislike_count = interaction_entry
+            net_preference = like_count - dislike_count
+
+        similarity_score = alpha * title_similarity + (1 - alpha) * lyric_similarity
+        similarity[i] = (similarity_score, net_preference)
+
+    sorted_similarity = dict(sorted(similarity.items(), key=lambda item: (-item[1][1], -item[1][0])))
 
     for i in range(num):
-        index, score = list(sorted_similarity.items())[i]
-        if score == 0:
+        index, scores = list(sorted_similarity.items())[i]
+        sim_score, rel_score = scores
+
+        if sim_score == 0:
             if i == 0:
                 st.write('There is no such lyrics found! please try again with some other lyric...')
             break
@@ -82,3 +128,5 @@ if st.button("Find the song", type='primary'):
         cdf = df.iloc[index]
         st.write(cdf)
         st.markdown(youtube_crawler_service.GetYtVideo(cdf['title']+' video song '+cdf['artist']), unsafe_allow_html=True)
+        st.button(label="\U0001f44d", key=f'like{i}', on_click= like_click, args=(query, cdf['title'], index))
+        st.button(label="\U0001f44e", key=f'dislike{i}', on_click= dislike_click,  args=(query, cdf['title'], index))
