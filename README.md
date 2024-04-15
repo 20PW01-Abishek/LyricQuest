@@ -23,7 +23,7 @@ To run LyricQuest locally, follow these steps:
 1. Clone the repository:
 
    ```
-   git clone https://github.com/karthiksmanian/lyricquest.git
+   git clone https://github.com/karthiksmanian/LyricQuest.git
    ```
 
 2. Install dependencies:
