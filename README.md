@@ -50,4 +50,7 @@ To run LyricQuest locally, follow these steps:
 2. Lyrics weighted matching
    ![Alt text](lyricsbasedmatch.png)
 
-## Contributing
+## Contributors
+
+20PW01 - Abishek A.
+20PW16 - Karthik Manian S.
